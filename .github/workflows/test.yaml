@@ -1,23 +1,54 @@
-name: Test
+name: Build & Release Docker Image
 
-on: [push]
+on:
+  push:
+    branches: ["main"]
 
 jobs:
-  test:
+  build-release:
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: write     # нужно чтобы создавать релизы
+      packages: write
+
     steps:
-      - uses: actions/checkout@v2
-      - name: Set up Python
-        uses: actions/setup-python@v2
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Build Docker image
+        run: |
+          docker build -t fastapi-app:latest .
+
+      - name: Save image to tar
+        run: |
+          mkdir artifacts
+          docker save fastapi-app:latest -o artifacts/fastapi-app.tar
+
+      # ============================
+      # CREATE RELEASE
+      # ============================
+      - name: Create GitHub Release
+        id: create_release
+        uses: softprops/action-gh-release@v1
         with:
-          python-version: '3.11'
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r src/requirements.txt
-      - name: Build image
-        run: |
-          docker build -t pablaofficeal/fastapi-app:latest .
-      - name: Push image
-        run: |
-          docker push pablaofficeal/fastapi-app:latest
+          tag_name: "build-${{ github.run_number }}"
+          name: "Build ${{ github.run_number }}"
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # ============================
+      # UPLOAD TAR TO RELEASE
+      # ============================
+      - name: Upload Docker image artifact to release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: "build-${{ github.run_number }}"
+          files: artifacts/fastapi-app.tar
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
