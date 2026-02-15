@@ -1,8 +1,6 @@
 import os
 import subprocess
 
-
+subprocess.check_call(['docker', 'tag', 'pabla/fastapi-app:latest', 'pablaofficeal/fastapi-app:latest'])
 subprocess.check_call(['sleep', '2'])
-subprocess.check_call(['git', 'add', '.'])
-subprocess.check_call(['git', 'commit', '-m', 'format go files'])
-subprocess.check_call(['git', 'push'])
+subprocess.check_call(['docker', 'push', 'pablaofficeal/fastapi-app:latest'])
