@@ -13,7 +13,8 @@ spec:
         app: fastapi-app
     spec:
       containers:
-        - name: fastapi-app
-          image: pablaofficeal/fastapi-app:v1
+        - name: fastapi
+          image: pabla/fastapi-app:v1
+          imagePullPolicy: Always
           ports:
             - containerPort: 5005
